@@ -13,6 +13,9 @@
 #include <QMenuBar>
 #include <QPushButton>
 #include <QLineEdit>
+#include <QFuture>
+#include <QtConcurrent>
+#include <QProgressDialog>
 
 namespace Ui {
 class MainWindow;
@@ -27,8 +30,11 @@ public:
     ~MainWindow();
 
 private slots:
-    void onOpen();
+    void onInputOpen();
+    void onOutputOpen();
+    void onClose();
     void onStart();
+    void onSave();
 
 private:
     Ui::MainWindow *ui;
@@ -36,8 +42,10 @@ private:
     QTextEdit *outputLog;
     QWidget *mainWidget;
     QMenu *fileMenu;
-    QAction *actOpen;
+    QAction *actInputOpen;
     QAction *actSave;
+    QAction *actClose;
+    QAction *actRun;
 
     QLabel *optionKLabel;
     QSpinBox *optionK;
@@ -45,12 +53,20 @@ private:
     QLabel *optionNumCirclesLabel;
     QSpinBox *optionNumCircles;
 
-    QVBoxLayout *layout;
+    QHBoxLayout *layout;
+    QVBoxLayout *leftLayout;
+    QVBoxLayout *rightLayout;
     QHBoxLayout *optionsLayout;
+    QHBoxLayout *outputLayout;
 
     QPushButton *startButton;
     QLineEdit *inputFileEdit;
-    QPushButton *browseButton;
+    QPushButton *inputBrowseButton;
+    QLineEdit *outputFileEdit;
+    QPushButton *outputBrowseButton;
+    QPushButton *saveButton;
+
+    QProcess *process;
 
     void createLog();
     void createMenu();

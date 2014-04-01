@@ -5,6 +5,8 @@
 #-------------------------------------------------
 
 QT       += core gui
+QT += concurrent widgets
+QMAKE_LFLAGS += /INCREMENTAL:NO
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -13,8 +15,12 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    exampleprogram.cpp
 
 HEADERS  += mainwindow.h
 
 FORMS    += mainwindow.ui
+
+#enable console
+CONFIG += console
