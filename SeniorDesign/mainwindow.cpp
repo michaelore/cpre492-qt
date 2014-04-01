@@ -4,7 +4,8 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    runDialog(NULL)
 {
     createLog();
     createOptions();
@@ -16,21 +17,6 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
-}
-
-QString runProcess() {
-    //QString program = "\"" + QCoreApplication::applicationDirPath();
-    QString program = "C:/dev";
-    program += "/a.exe";
-    qDebug() << program;
-    QProcess * process = new QProcess();
-    process->start(program);
-    if(process->waitForFinished()) {
-        qDebug() << "Process ran!";
-    } else {
-        qDebug() << "Process did not run";
-    }
-    return process->readAllStandardOutput();
 }
 
 void MainWindow::createLog()
@@ -115,62 +101,41 @@ void MainWindow::createOptions()
 void MainWindow::onStart()
 {
     startButton->setEnabled(false);
-    // Create concurrent thread pool for when we run Michael's function (Right now this doesn't work)
-    // Run Progam
-    // Prepare the vector.
-    //QVector<int> vector;
-    //const int iterations = 1;
-    //for (int i = 0; i < iterations; ++i)
-    //    vector.append(i);
 
-    // Create a progress dialog.
-    QProgressDialog dialog;
-    dialog.setLabelText(QString("Progressing using %1 thread(s)...").arg(QThread::idealThreadCount()));
-    dialog.setWindowFlags(Qt::WindowTitleHint);
-    // Create a QFutureWatcher and connect signals and slots.
-    QFutureWatcher<void> futureWatcher;
-    connect(&futureWatcher, SIGNAL(finished()), &dialog, SLOT(reset()));
-    connect(&dialog, SIGNAL(canceled()), &futureWatcher, SLOT(cancel()));
-    connect(&futureWatcher, SIGNAL(progressRangeChanged(int,int)), &dialog, SLOT(setRange(int,int)));
-    connect(&futureWatcher, SIGNAL(progressValueChanged(int)), &dialog, SLOT(setValue(int)));
+    runDialog = new RunningDialog();
+    runDialog->setProgramName("a.exe");
+    runDialog->setOutputFilename("out.txt");
+    connect(runDialog, SIGNAL(accepted()), this, SLOT(onProgramFinished()));
+    connect(runDialog, SIGNAL(canceled()), this, SLOT(onProgramCancelled()));
+    connect(runDialog, SIGNAL(rejected()), this, SLOT(onProgramCancelled()));
+    runDialog->exec();
+}
 
-    // Start the computation.
-    //QTextStream cin(stdin);
-    QFuture<QString> future = QtConcurrent::run(runProcess);
-    futureWatcher.setFuture(future);
-
-    // Display the dialog and start the event loop.
-    dialog.exec();
-    qApp->processEvents();
-    if (dialog.wasCanceled()) {
-        future.cancel();
-
-        outputLog->append("Process has been canceled.");
-    } else {
-        futureWatcher.waitForFinished();
-        QString result = future.result();
-        outputLog->append(result);
-        QString filename = outputFileEdit->text();
-        if(filename != "") {
-            QFile file(filename);
-            if (!file.open(QIODevice::WriteOnly)) {
-                QMessageBox::information(this, tr("Unable to open file"),
-                    file.errorString());
-                return;
-            }
-            QTextStream out(&file);
-            out << result << flush;
-            outputLog->append("Result has been saved to " + filename);
-            file.close();
+void MainWindow::onProgramFinished()
+{
+    QString filename = outputFileEdit->text();
+    if(filename != "") {
+        QFile file(filename);
+        if (!file.open(QIODevice::WriteOnly)) {
+            QMessageBox::information(this, tr("Unable to open file"),
+                file.errorString());
+            return;
         }
+        QTextStream out(&file);
+        outputLog->append(file.readAll());
+        outputLog->append("Result has been saved to " + filename);
+        file.close();
     }
-    startButton->setEnabled(true);
-    // Query the future to check if was canceled.
-    //qDebug() << "Canceled?" << futureWatcher.future().isCanceled();
-    //
-    //outputLog->append(QString::number(future.result()));
+}
 
-
+void MainWindow::onProgramCancelled()
+{
+    outputLog->append("Process has been canceled.");
+    if(runDialog && runDialog->getProc()->state() == QProcess::Running) {
+        runDialog->getProc()->kill();
+        QMessageBox errorBox;
+        errorBox.critical(0, "Error", "Program has been terminated");
+    }
 }
 
 void MainWindow::onInputOpen()
@@ -181,9 +146,6 @@ void MainWindow::onInputOpen()
                 QDir::homePath(),
                 "Text files (*.txt);;All files (*.*)"
             );
-    //program.exe K_param input_filename
-    //QProcess *proc = new QProcess();
-    //proc->start(filename);
     if(filename != "")
         inputFileEdit->setText(filename);
 }
@@ -196,9 +158,6 @@ void MainWindow::onOutputOpen()
                 QDir::homePath(),
                 "Text files (*.txt);;All files (*.*)"
             );
-    //program.exe K_param input_filename
-    //QProcess *proc = new QProcess();
-    //proc->start(filename);
     if(filename != "")
         outputFileEdit->setText(filename);
 }

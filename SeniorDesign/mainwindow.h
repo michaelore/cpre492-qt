@@ -16,6 +16,7 @@
 #include <QFuture>
 #include <QtConcurrent>
 #include <QProgressDialog>
+#include "runningdialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -30,6 +31,8 @@ public:
     ~MainWindow();
 
 private slots:
+    void onProgramFinished();
+    void onProgramCancelled();
     void onInputOpen();
     void onOutputOpen();
     void onClose();
@@ -67,6 +70,8 @@ private:
     QPushButton *saveButton;
 
     QProcess *process;
+
+    RunningDialog *runDialog;
 
     void createLog();
     void createMenu();

@@ -16,9 +16,11 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    exampleprogram.cpp
+    exampleprogram.cpp \
+    runningdialog.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    runningdialog.h
 
 FORMS    += mainwindow.ui
 
