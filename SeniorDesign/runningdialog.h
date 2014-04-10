@@ -9,8 +9,9 @@ class RunningDialog : public QProgressDialog
     Q_OBJECT
 public:
     explicit RunningDialog(QWidget *parent = 0);
-    void setProgramName(QString program) {this->programName = program;}
-    void setOutputFilename(QString outputFile) {this->outputFile = outputFile;}
+    void setProgramName(QString program);
+    void setOutputFilename(QString outputFile);
+    void setInputFilename(QString inputFile);
     QProcess *getProc() {return proc;}
 signals:
 
@@ -24,6 +25,7 @@ protected:
 
     QString programName;
     QString outputFile;
+    QString inputFile;
 };
 
 #endif // RUNNINGDIALOG_H

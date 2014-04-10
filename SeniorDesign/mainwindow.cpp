@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "runningdialog.h"
 #include "exampleprogram.cpp"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -31,7 +32,7 @@ void MainWindow::createLayout()
     layout = new QHBoxLayout;
     leftLayout = new QVBoxLayout;
     leftLayout->addWidget(outputLog);
-    leftLayout->addLayout(optionsLayout);
+    leftLayout->addLayout(inputLayout);
     leftLayout->addLayout(outputLayout);
     layout->addLayout(leftLayout);
     mainWidget->setLayout(layout);
@@ -57,7 +58,7 @@ void MainWindow::createMenu()
 
 void MainWindow::createOptions()
 {
-    optionsLayout = new QHBoxLayout;
+    inputLayout = new QHBoxLayout;
     outputLayout = new QHBoxLayout;
     optionKLabel = new QLabel("# points within circle?");
     optionK = new QSpinBox(this);
@@ -85,17 +86,17 @@ void MainWindow::createOptions()
 
     QLabel * input = new QLabel ("Input:   ");
     QLabel * output = new QLabel("Output: ");
-    optionsLayout->addWidget(input);
-    optionsLayout->addWidget(inputFileEdit);
-    optionsLayout->addWidget(inputBrowseButton);
-    optionsLayout->addWidget(optionNumCirclesLabel);
-    optionsLayout->addWidget(optionNumCircles);
-    optionsLayout->addWidget(optionKLabel);
-    optionsLayout->addWidget(optionK);
-    optionsLayout->addWidget(startButton);
+    inputLayout->addWidget(input);
+    inputLayout->addWidget(inputFileEdit);
+    inputLayout->addWidget(inputBrowseButton);
+    inputLayout->addWidget(optionNumCirclesLabel);
+    inputLayout->addWidget(optionNumCircles);
+    inputLayout->addWidget(optionKLabel);
+    inputLayout->addWidget(optionK);
     outputLayout->addWidget(output);
     outputLayout->addWidget(outputFileEdit);
     outputLayout->addWidget(outputBrowseButton);
+    outputLayout->addWidget(startButton);
 }
 
 void MainWindow::onStart()
@@ -103,39 +104,43 @@ void MainWindow::onStart()
     startButton->setEnabled(false);
 
     runDialog = new RunningDialog();
-    runDialog->setProgramName("a.exe");
-    runDialog->setOutputFilename("out.txt");
+    QString programName = "longexample.exe";
+    runDialog->setProgramName(qApp->applicationDirPath() + "/" + programName);
+    runDialog->setInputFilename(inputFileEdit->text());
+    runDialog->setOutputFilename(outputFileEdit->text());
     connect(runDialog, SIGNAL(accepted()), this, SLOT(onProgramFinished()));
     connect(runDialog, SIGNAL(canceled()), this, SLOT(onProgramCancelled()));
-    connect(runDialog, SIGNAL(rejected()), this, SLOT(onProgramCancelled()));
     runDialog->exec();
 }
 
 void MainWindow::onProgramFinished()
 {
+    //qDebug() << "Finished";
+    runDialog->hide();
     QString filename = outputFileEdit->text();
     if(filename != "") {
         QFile file(filename);
-        if (!file.open(QIODevice::WriteOnly)) {
+        if (!file.open(QIODevice::ReadOnly)) {
             QMessageBox::information(this, tr("Unable to open file"),
                 file.errorString());
             return;
         }
-        QTextStream out(&file);
         outputLog->append(file.readAll());
         outputLog->append("Result has been saved to " + filename);
         file.close();
     }
+    startButton->setEnabled(true);
 }
 
 void MainWindow::onProgramCancelled()
 {
-    outputLog->append("Process has been canceled.");
+    outputLog->append("Program has been terminated.");
     if(runDialog && runDialog->getProc()->state() == QProcess::Running) {
         runDialog->getProc()->kill();
         QMessageBox errorBox;
-        errorBox.critical(0, "Error", "Program has been terminated");
+        errorBox.critical(0, "", "Program has been terminated");
     }
+    startButton->setEnabled(true);
 }
 
 void MainWindow::onInputOpen()

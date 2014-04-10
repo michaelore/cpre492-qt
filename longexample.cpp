@@ -18,8 +18,14 @@ int examplefunction()
 int main(int argc, char *argv[])
 {
   // Compute result
-  cout << "Return 1 = " << examplefunction();
-  cout << "Return 2 = " << examplefunction();
+  cout << "Return 1 = " << examplefunction() << endl;
+  cout << "Return 2 = " << examplefunction() << endl;
+  if(argc > 0) {
+	int i = 0;
+	for(i = 0; i < argc; i++) {
+		cout << "Input " << i << " = " << argv[i] << endl;
+	}
+  }
   
   return 0;
 }

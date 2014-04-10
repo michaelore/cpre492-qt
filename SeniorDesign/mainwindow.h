@@ -59,7 +59,7 @@ private:
     QHBoxLayout *layout;
     QVBoxLayout *leftLayout;
     QVBoxLayout *rightLayout;
-    QHBoxLayout *optionsLayout;
+    QHBoxLayout *inputLayout;
     QHBoxLayout *outputLayout;
 
     QPushButton *startButton;
