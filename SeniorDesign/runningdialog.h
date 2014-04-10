@@ -11,7 +11,8 @@ public:
     explicit RunningDialog(QWidget *parent = 0);
     void setProgramName(QString program);
     void setOutputFilename(QString outputFile);
-    void setInputFilename(QString inputFile);
+    void setInputArgs(QString inputFile, int numCircles, int kValues);
+    void process();
     QProcess *getProc() {return proc;}
 signals:
 
@@ -26,6 +27,8 @@ protected:
     QString programName;
     QString outputFile;
     QString inputFile;
+    int numCircles;
+    int kValues;
 };
 
 #endif // RUNNINGDIALOG_H

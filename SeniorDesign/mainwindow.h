@@ -38,6 +38,7 @@ private slots:
     void onClose();
     void onStart();
     void onSave();
+    void canStart();
 
 private:
     Ui::MainWindow *ui;

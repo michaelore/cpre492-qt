@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
     createMenu();
     createLayout();
     setCentralWidget(mainWidget);
+    startButton->setEnabled(false);
 }
 
 MainWindow::~MainWindow()
@@ -77,12 +78,16 @@ void MainWindow::createOptions()
     connect(saveButton, SIGNAL(clicked()), this, SLOT(onSave()));
 
     inputFileEdit = new QLineEdit;
+    inputFileEdit->setReadOnly(true);
     inputBrowseButton = new QPushButton("Browse");
     connect(inputBrowseButton, SIGNAL(clicked()), this, SLOT(onInputOpen()));
+    connect(inputFileEdit, SIGNAL(textChanged(QString)), this, SLOT(canStart()));
 
     outputFileEdit = new QLineEdit;
+    outputFileEdit->setReadOnly(true);
     outputBrowseButton = new QPushButton("Browse");
     connect(outputBrowseButton, SIGNAL(clicked()), this, SLOT(onOutputOpen()));
+    connect(outputFileEdit, SIGNAL(textChanged(QString)), this, SLOT(canStart()));
 
     QLabel * input = new QLabel ("Input:   ");
     QLabel * output = new QLabel("Output: ");
@@ -106,19 +111,19 @@ void MainWindow::onStart()
     runDialog = new RunningDialog();
     QString programName = "longexample.exe";
     runDialog->setProgramName(qApp->applicationDirPath() + "/" + programName);
-    runDialog->setInputFilename(inputFileEdit->text());
+    runDialog->setInputArgs(inputFileEdit->text(), optionNumCircles->value(), optionK->value());
     runDialog->setOutputFilename(outputFileEdit->text());
     connect(runDialog, SIGNAL(accepted()), this, SLOT(onProgramFinished()));
     connect(runDialog, SIGNAL(canceled()), this, SLOT(onProgramCancelled()));
+    runDialog->process();
     runDialog->exec();
 }
 
 void MainWindow::onProgramFinished()
 {
-    //qDebug() << "Finished";
     runDialog->hide();
     QString filename = outputFileEdit->text();
-    if(filename != "") {
+    /*if(filename != "") {
         QFile file(filename);
         if (!file.open(QIODevice::ReadOnly)) {
             QMessageBox::information(this, tr("Unable to open file"),
@@ -126,15 +131,16 @@ void MainWindow::onProgramFinished()
             return;
         }
         outputLog->append(file.readAll());
-        outputLog->append("Result has been saved to " + filename);
+        outputLog->append(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss") + " Result successfully saved to " + filename);
         file.close();
-    }
+    }*/
+    outputLog->append(QDateTime::currentDateTime().toString("(hh:mm:ss)") + " Result successfully saved to " + filename);
     startButton->setEnabled(true);
 }
 
 void MainWindow::onProgramCancelled()
 {
-    outputLog->append("Program has been terminated.");
+    outputLog->append(QDateTime::currentDateTime().toString("(hh:mm:ss)") + " Program cancelled.");
     if(runDialog && runDialog->getProc()->state() == QProcess::Running) {
         runDialog->getProc()->kill();
         QMessageBox errorBox;
@@ -188,4 +194,9 @@ void MainWindow::onSave()
         outputLog->append("Log has been saved to " + filename);
         file.close();
     }
+}
+
+void MainWindow::canStart()
+{
+    startButton->setEnabled(inputFileEdit->text() != "" && outputFileEdit->text() != "");
 }
